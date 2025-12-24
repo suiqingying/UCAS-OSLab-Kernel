@@ -280,6 +280,7 @@ static void fs_sync_metadata(void)
     fs_sync_inode_bitmap();
     fs_sync_block_bitmap();
     fs_sync_inode_table();
+    cache_flush_all();
 }
 
 static void fs_load_inode_bitmap(void)
@@ -1338,6 +1339,7 @@ int do_write(int fd, char *buff, int length)
         desc->offset += (uint32_t)written;
         fs_sync_inode_table();
         fs_sync_block_bitmap();
+        cache_flush_all();
         if (inode->flags & INODE_FLAG_VM) {
             fs_load_vm_config();
         }
@@ -1380,6 +1382,7 @@ int do_ln(char *src_path, char *dst_path)
     inode->links++;
     fs_sync_inode_table();
     fs_sync_inode_bitmap();
+    cache_flush_all();
     return 0;
 }
 
@@ -1413,6 +1416,7 @@ int do_rm(char *path)
         fs_sync_inode_bitmap();
     }
     fs_sync_inode_table();
+    cache_flush_all();
     return 0;
 }
 
