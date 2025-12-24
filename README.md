@@ -123,7 +123,36 @@
 
 ### 4. 测试建议
 
-- 读缓存：重复读同一文件观察性能差异
-- 元数据缓存：大量空文件 + ls -l 的延迟对比
-- 写策略：断电场景比较 write back 与 write through
+- 读缓存（数据块）：先生成大文件，再做冷/热两次读取对比
+  ```bash
+  exec cache_read init 32
+  # 重启，确保冷缓存
+  exec cache_read
+  ```
+  输出包含 `read-1 (cold)` / `read-2 (warm)`，只比较相对时间，第二次应明显更快。
 
+- 元数据缓存（目录项）：先批量建文件，再做冷/热两次查找对比
+  ```bash
+  exec meta_bench init 500
+  # 重启，确保冷缓存
+  exec meta_bench run 500
+  ```
+  输出包含 `lookup-1 (cold)` / `lookup-2 (warm)`，只比较相对时间。
+
+- 写策略可靠性（断电场景）
+  1) write back（可能丢数据）
+     ```bash
+     vm wb 30
+     exec write_policy 8
+     ```
+     立即断电/退出 QEMU（不要等待 30s 刷盘），重启后检查 `/benchpolicy/policy.txt` 是否保留。
+  2) write through（应保留数据）
+     ```bash
+     vm wt
+     exec write_policy 8
+     ```
+     立即断电/退出 QEMU，重启后对比结果。
+
+补充说明：
+- `cache_read` 默认读 `/bench/cache.bin`，`meta_bench` 默认建 `/benchmeta`，`write_policy` 写入 `/benchpolicy/policy.txt`。
+- 时长显示为 tick 与粗略毫秒（由 `timebase` 换算），不同平台数值不同，但冷热对比应明显。
