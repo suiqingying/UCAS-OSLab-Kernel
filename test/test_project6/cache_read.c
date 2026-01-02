@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define DEFAULT_MB 32
+#define DEFAULT_MB 0
 #define CHUNK_SIZE 4096
 
 static char buf[CHUNK_SIZE];
@@ -34,6 +34,9 @@ static int write_file(const char *path, int mb)
         return -1;
     }
     long total = (long)mb * 1024 * 1024;
+    if (total < CHUNK_SIZE) {
+        total = CHUNK_SIZE;
+    }
     long written = 0;
     while (written < total) {
         int n = sys_write(fd, buf, CHUNK_SIZE);

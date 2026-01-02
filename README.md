@@ -125,7 +125,7 @@
 
 - 读缓存（数据块）：先生成大文件，再做冷/热两次读取对比
   ```bash
-  exec cache_read init 32
+  exec cache_read init
   # 重启，确保冷缓存
   exec cache_read
   ```
@@ -133,9 +133,9 @@
 
 - 元数据缓存（目录项）：先批量建文件，再做冷/热两次查找对比
   ```bash
-  exec meta_bench init 500
+  exec meta_bench init 20
   # 重启，确保冷缓存
-  exec meta_bench run 500
+  exec meta_bench run 20
   ```
   输出包含 `lookup-1 (cold)` / `lookup-2 (warm)`，只比较相对时间。
 
@@ -143,16 +143,21 @@
   1) write back（可能丢数据）
      ```bash
      vm wb 30
-     exec write_policy 8
+     exec write_policy
      ```
      立即断电/退出 QEMU（不要等待 30s 刷盘），重启后检查 `/benchpolicy/policy.txt` 是否保留。
   2) write through（应保留数据）
      ```bash
      vm wt
-     exec write_policy 8
+     exec write_policy
      ```
      立即断电/退出 QEMU，重启后对比结果。
 
 补充说明：
 - `cache_read` 默认读 `/bench/cache.bin`，`meta_bench` 默认建 `/benchmeta`，`write_policy` 写入 `/benchpolicy/policy.txt`。
 - 时长显示为 tick 与粗略毫秒（由 `timebase` 换算），不同平台数值不同，但冷热对比应明显。
+
+## 六、镜像生成说明（模拟器与 SD 卡）
+
+- 模拟器（预留 FS 空间）：`make all`
+- SD 卡（不预留 FS 空间，小镜像便于烧录）：`make image-sd`

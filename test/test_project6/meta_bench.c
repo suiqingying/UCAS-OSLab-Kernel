@@ -3,7 +3,7 @@
 #include <string.h>
 #include <unistd.h>
 
-#define DEFAULT_COUNT 5000
+#define DEFAULT_COUNT 20
 
 static int int_to_str(int value, char *out)
 {

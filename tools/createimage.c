@@ -7,7 +7,7 @@
 #include <string.h>
 
 #define IMAGE_FILE "./image"
-#define ARGS "[--extended] [--vm] <bootblock> <executable-file> ..."
+#define ARGS "[--extended] [--vm] [--no-fs] <bootblock> <executable-file> ..."
 
 #define SECTOR_SIZE 512
 #define BOOT_LOADER_SIG_OFFSET 0x1fe
@@ -22,8 +22,8 @@
 // Keep these values synchronized with include/os/mm.h
 #define MAX_SWAP_PAGES 131072 / 64 // Maximum pages that can be swapped (512MB)
 #define SWAP_SECTORS_PER_PAGE 8
-#define FS_START_SECTOR 0x100000  /* 512MB */
-#define FS_TOTAL_SECTORS 0x100000 /* 512MB */
+#define FS_START_SECTOR 0x100000 /* 512MB */
+#define FS_TOTAL_SECTORS 0x20000 /* 64MB */
 
 #define NBYTES2SEC(nbytes) (((nbytes) / SECTOR_SIZE) + ((nbytes) % SECTOR_SIZE != 0))
 
@@ -43,6 +43,7 @@ static task_info_t taskinfo[TASK_MAXNUM];
 static struct {
     int vm;
     int extended;
+    int no_fs;
 } options;
 
 /* prototypes of local functions */
@@ -68,6 +69,7 @@ int main(int argc, char **argv)
     /* process command line options */
     options.vm = 0;
     options.extended = 0;
+    options.no_fs = 0;
     while ((argc > 1) && (argv[1][0] == '-') && (argv[1][1] == '-')) {
         char *option = &argv[1][2];
 
@@ -75,6 +77,8 @@ int main(int argc, char **argv)
             options.vm = 1;
         } else if (strcmp(option, "extended") == 0) {
             options.extended = 1;
+        } else if (strcmp(option, "no-fs") == 0) {
+            options.no_fs = 1;
         } else {
             error("%s: invalid option\nusage: %s %s\n", progname,
                   progname, ARGS);
@@ -192,7 +196,9 @@ static void create_image(int nfiles, char *files[])
     int swap_start_sector = 0;
     reserve_swap_space(img, &phyaddr, &swap_start_sector);
     write_swap_info(img, swap_start_sector);
-    reserve_fs_space(img, &phyaddr);
+    if (!options.no_fs) {
+        reserve_fs_space(img, &phyaddr);
+    }
     fclose(img);
 }
 

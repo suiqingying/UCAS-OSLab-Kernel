@@ -206,3 +206,10 @@ image: $(ELF_CREATEIMAGE) $(ELF_BOOT) $(ELF_MAIN) $(ELF_USER)
 	cd $(DIR_BUILD) && ./$(<F) --extended $(filter-out $(<F), $(^F)) 
 
 .PHONY: image
+
+# SD-card image without reserving FS space (full build like `all`).
+image-sd: clean dirs elf asm $(ELF_CREATEIMAGE) $(ELF_BOOT) $(ELF_MAIN) $(ELF_USER)
+	cd $(DIR_BUILD) && ./$(notdir $(ELF_CREATEIMAGE)) --extended --no-fs \
+		$(notdir $(ELF_BOOT)) $(notdir $(ELF_MAIN)) $(foreach u,$(ELF_USER),$(notdir $(u)))
+
+.PHONY: image-sd
